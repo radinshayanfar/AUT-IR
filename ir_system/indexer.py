@@ -3,23 +3,39 @@ from tqdm.contrib import tqdm
 
 
 class Posting:
-    def __init__(self, doc_id: int, length=0):
+    def __init__(self, doc_id: int, positions=[]):
         self.doc_id: int = doc_id
-        self.positions: list = []
-        self.length: int = length
+        self.positions: list = positions
 
     def add_position(self, position: int):
         self.positions.append(position)
-        self.length += 1
 
     def __len__(self):
-        return self.length
+        return self.positions.__len__()
+
+    def __eq__(self, other):
+        return self.__len__() == other.__len__()
+
+    def __gt__(self, other):
+        return self.__len__() > other.__len__()
+
+    def __ge__(self, other):
+        return self.__len__() > other.__len__()
+
+    def __lt__(self, other):
+        return self.__len__() < other.__len__()
+
+    def __le__(self, other):
+        return self.__len__() <= other.__len__()
+
+    def __ne__(self, other):
+        return self.__len__() != other.__len__()
 
     def __str__(self) -> str:
-        return self.doc_id.__str__() + ': ' + self.positions.__str__()
+        return self.doc_id.__str__() + ', ' + str(self.__len__()) + ': ' + self.positions.__str__()
 
     def __repr__(self) -> str:
-        return self.doc_id.__repr__() + ': ' + self.positions.__repr__()
+        return self.__str__()
 
 
 class PostingsList:
@@ -69,7 +85,7 @@ class InvertedIndex:
         return out_postings
 
     def get_postings(self, term: str) -> PostingsList:
-        return self.dictionary[term]
+        return self.dictionary.get(term, PostingsList())
 
     def __str__(self) -> str:
         return self.dictionary.__str__()

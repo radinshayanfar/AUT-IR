@@ -1,4 +1,5 @@
 import logging
+from pprint import pprint
 
 from ir_system.query import Expression, Identifier
 
@@ -23,8 +24,11 @@ if __name__ == '__main__':
     ir.load_index('index.pkl')
     logging.info('index loaded')
 
-    # ir.query('"تحریم هسته‌ای" آمریکا ! ایران')
+    pprint(ir.query('تحریم آمریکا ایران'))
+    pprint(ir.query('"رییس جمهور"'))
+    pprint(ir.query('غده'))
+    pprint(ir.query('"تحریم هسته‌ای" آمریکا علیه برادران ! ایران'))
     # ir.query('"Foo Bar" fiz "Another Value" something else')
     # print(ir.tokenized_collection['2969'])
 
-    print(Expression(Identifier('آمریکا', ir.index), 'AND POS', Identifier('ایر', ir.index)).evaluate())
+    # print(Expression(Identifier('آمریکا', ir.index), 'AND POS', Identifier('ایر', ir.index)).evaluate())

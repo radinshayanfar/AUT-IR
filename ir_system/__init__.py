@@ -4,7 +4,7 @@ import pickle
 
 import hazm
 
-from .indexer import InvertedIndex
+from .indexer import InvertedIndex, PostingsList
 from .query import Query
 from .utils import map_dict, remove_stop_words
 
@@ -42,5 +42,20 @@ class IR:
         with open(file_path, 'rb') as fp:
             self.index = pickle.load(fp)
 
-    def query(self, query_string: str):
+    def posting_result_to_title(self, results: PostingsList) -> list:
+        out = []
+        for posting in results.p_list:
+            doc_id = str(posting.doc_id)
+            doc = self.collection[doc_id]
+            out.append({'id': doc_id, 'title': doc['title'], 'url': doc['url']})
+
+        return out
+
+    def query(self, query_string: str) -> list:
         q = Query(query_string)
+        results = q.get_results(self.index)
+        results.p_list.sort(reverse=True)
+        if len(results) > 5:
+            results.p_list = results.p_list[:5]
+
+        return self.posting_result_to_title(results)
