@@ -3,7 +3,9 @@ from tqdm.contrib import tqdm
 
 
 class Posting:
-    def __init__(self, doc_id: int, positions=[]):
+    def __init__(self, doc_id: int, positions=None):
+        if positions is None:
+            positions = []
         self.doc_id: int = doc_id
         self.positions: list = positions
 
@@ -41,9 +43,14 @@ class Posting:
 class PostingsList:
     def __init__(self):
         self.p_list: list = []
+        self.length = 0
 
     def add_document(self, posting: Posting):
         self.p_list.append(posting)
+        self.length += len(posting)
+
+    def total_freq(self):
+        return self.length
 
     def __getitem__(self, item) -> Posting:
         return self.p_list.__getitem__(item)
