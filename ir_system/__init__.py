@@ -5,7 +5,8 @@ import pickle
 import hazm
 
 from .indexer import InvertedIndex
-from .preprocessing import map_dict, remove_stop_words
+from .query import Query
+from .utils import map_dict, remove_stop_words
 
 
 class IR:
@@ -40,3 +41,6 @@ class IR:
     def load_index(self, file_path: str):
         with open(file_path, 'rb') as fp:
             self.index = pickle.load(fp)
+
+    def query(self, query_string: str):
+        q = Query(query_string)
