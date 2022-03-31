@@ -1,34 +1,63 @@
+import argparse
 import logging
+from argparse import Namespace
 from pprint import pprint
-
-from ir_system.query import Expression, Identifier
-
-logging.basicConfig(level=logging.INFO)
 
 import ir_system
 
+logging.basicConfig(level=logging.INFO)
+
+
+def parse_arguments() -> Namespace:
+    parser = argparse.ArgumentParser(prog="MyIRSystem", allow_abbrev=False)
+
+    parser.add_argument('-hl', '--heaps-law', action='store_true', help='demonstrate heaps law')
+    parser.add_argument('-zl', '--zipf-law', action='store_true', help='demonstrate zipf law')
+
+    i_group = parser.add_mutually_exclusive_group(required=False)
+    i_group.add_argument('-l', '--load', type=str, action='store', metavar='index.pkl',
+                         help='load previously saved index')
+    i_group.add_argument('-s', '--save', type=str, action='store', metavar='index.pkl', help='save built index')
+
+    parser.add_argument('collection', type=str, help='collection .json file path', metavar='collection.json')
+
+    return parser.parse_args()
+
+
+def handling_arguments(args: Namespace, ir: ir_system.IR):
+    if args.heaps_law:
+        logging.info('demonstrating heaps law')
+        # TODO
+
+    if args.zipf_law:
+        logging.info('demonstrating zipf law')
+        # TODO
+
+    if args.load is not None:
+        logging.info('loading index')
+        ir.load_index(args.load)
+        logging.info('index loaded')
+    else:
+        logging.info('preprocessing collection')
+        ir.preprocess()
+
+        logging.info('building inverted index')
+        ir.build_index()
+
+    if args.save is not None:
+        logging.info('saving index')
+        ir.save_index(args.save)
+
+
 if __name__ == '__main__':
-    logging.info('Parsing collection')
-    ir = ir_system.IR('IR_data_news_12k.json')
+    args = parse_arguments()
 
-    # logging.info('Preprocessing collection')
-    # ir.preprocess()
-    #
-    # logging.info('Building inverted index')
-    # ir.build_index()
-    #
-    # logging.info('Saving index')
-    # ir.save_index('index.pkl')
+    logging.info('parsing collection')
+    ir = ir_system.IR(args.collection)
 
-    logging.info('loading index')
-    ir.load_index('index.pkl')
-    logging.info('index loaded')
+    handling_arguments(args, ir)
 
     pprint(ir.query('تحریم آمریکا ایران'))
     pprint(ir.query('"رییس جمهور"'))
     pprint(ir.query('غده'))
     pprint(ir.query('"تحریم هسته‌ای" آمریکا علیه برادران ! ایران'))
-    # ir.query('"Foo Bar" fiz "Another Value" something else')
-    # print(ir.tokenized_collection['2969'])
-
-    # print(Expression(Identifier('آمریکا', ir.index), 'AND POS', Identifier('ایر', ir.index)).evaluate())
