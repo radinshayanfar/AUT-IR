@@ -27,11 +27,13 @@ def parse_arguments() -> Namespace:
 def handling_arguments(args: Namespace, ir: ir_system.IR):
     if args.heaps_law:
         logging.info('demonstrating heaps law')
-        # TODO
+        ir_system.utils.heaps_law(ir, stem=False)
+        ir_system.utils.heaps_law(ir, stem=True)
 
     if args.zipf_law:
         logging.info('demonstrating zipf law')
-        # TODO
+        ir_system.utils.zipf_law(ir, stop_words=False)
+        ir_system.utils.zipf_law(ir, stop_words=True)
 
     if args.load is not None:
         logging.info('loading index')

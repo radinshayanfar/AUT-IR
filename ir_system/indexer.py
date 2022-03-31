@@ -94,6 +94,12 @@ class InvertedIndex:
     def get_postings(self, term: str) -> PostingsList:
         return self.dictionary.get(term, PostingsList())
 
+    def total_tokens(self):
+        sum = 0
+        for p in self.dictionary.values():
+            sum += p.length
+        return sum
+
     def __str__(self) -> str:
         return self.dictionary.__str__()
 
