@@ -59,7 +59,13 @@ if __name__ == '__main__':
 
     handling_arguments(args, ir)
 
-    pprint(ir.query('تحریم آمریکا ایران'))
-    pprint(ir.query('"رییس جمهور"'))
-    pprint(ir.query('غده'))
-    pprint(ir.query('"تحریم هسته‌ای" آمریکا علیه برادران ! ایران'))
+    while True:
+        q_str = input('--> ')
+        if q_str == '':
+            break
+        pprint(ir.query(q_str))
+
+    # pprint(ir.query('تحریم آمریکا ایران'))
+    # pprint(ir.query('"رییس جمهور"'))
+    # pprint(ir.query('غده'))
+    # pprint(ir.query('"تحریم هسته‌ای" آمریکا علیه برادران ! ایران'))
