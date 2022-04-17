@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import hazm.utils
 from tqdm.contrib import tqdm
 
-stop_set: set = set(hazm.utils.stopwords_list())
+stop_set: set = set(hazm.utils.stopwords_list()).union(set("!@#$%^&*()-_=+?/\\|,~`:'\";<>"))
 
 
 def map_dict(f: Callable, d: dict) -> dict:
