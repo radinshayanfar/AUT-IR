@@ -3,7 +3,7 @@ from typing import Tuple, List, Union
 
 import hazm
 
-from . import InvertedIndex
+from . import InvertedIndex, utils
 from .indexer import PostingsList, Posting
 from .utils import remove_stop_words
 
@@ -124,7 +124,7 @@ class Query:
 
         return q_str, proximity_queries
 
-    def preprocess_query(self, q_str: str, stop_words=True) -> List[str]:
+    def preprocess_query(self, q_str: str, stop_words=True, preserve_exclamation=False) -> List[str]:
         # Normalizing query
         q_str = hazm.Normalizer().normalize(q_str)
 
@@ -136,12 +136,13 @@ class Query:
 
         # Removing stop words
         if stop_words:
-            q_str = remove_stop_words(q_str)
+            # ! should not be removed from non-positional queries
+            q_str = remove_stop_words(q_str, set_=utils.stop_set - {'!'} if preserve_exclamation else None)
 
         return q_str
 
     def tokenize_queries(self, binary_q: str, proximity_q: List[str]) -> Tuple[List[str], List[List[str]]]:
-        binary_q = self.preprocess_query(binary_q)
+        binary_q = self.preprocess_query(binary_q, preserve_exclamation=True)
         proximity_q = [self.preprocess_query(q) for q in proximity_q]
 
         return binary_q, proximity_q
@@ -151,7 +152,10 @@ class Query:
         exp = Identifier(tokens[next(it)], index)
         for i in it:
             if tokens[i] == '!':
-                i = next(it)
+                try:
+                    i = next(it)
+                except StopIteration:  # end of tokens due to removing stop words
+                    break
                 exp = Expression(exp, 'AND NOT', Identifier(tokens[i], index))
             else:
                 exp = Expression(exp, operator, Identifier(tokens[i], index))

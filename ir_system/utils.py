@@ -13,8 +13,10 @@ def map_dict(f: Callable, d: dict) -> dict:
     return {key: f(val) for key, val in tqdm(d.items())}
 
 
-def remove_stop_words(tokens: list) -> list:
-    return [t for t in tokens if t not in stop_set]
+def remove_stop_words(tokens: list, set_=None) -> list:
+    if set_ is None:
+        set_ = stop_set
+    return [t for t in tokens if t not in set_]
 
 
 def zipf_law(ir, stop_words):

@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     handling_arguments(args, ir)
 
-    print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[:10])
+    # print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[:10])
     while True:
         q_str = input('--> ')
         if q_str == '':
