@@ -40,14 +40,10 @@ def handling_arguments(args: Namespace, ir: ir_system.IR):
         ir.load_index(args.load)
         logging.info('index loaded')
     else:
-        logging.info('preprocessing collection')
         ir.preprocess()
-
-        logging.info('building inverted index')
         ir.build_index()
 
     if args.save is not None:
-        logging.info('saving index')
         ir.save_index(args.save)
 
 
@@ -59,6 +55,7 @@ if __name__ == '__main__':
 
     handling_arguments(args, ir)
 
+    print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[:10])
     while True:
         q_str = input('--> ')
         if q_str == '':

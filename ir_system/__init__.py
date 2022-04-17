@@ -17,6 +17,8 @@ class IR:
             self.collection: dict = json.load(fp)
 
     def preprocess(self, stem=True, stop_words=True):
+        logging.info('preprocessing collection')
+
         collection = self.collection
         collection = map_dict(lambda d: d['content'], collection)
         logging.info('Normalizing collection')
@@ -32,10 +34,12 @@ class IR:
         self.tokenized_collection = collection
 
     def build_index(self):
+        logging.info('building inverted index')
         self.index: InvertedIndex = InvertedIndex(self.tokenized_collection)
         self.index.index_collection()
 
     def save_index(self, file_path: str):
+        logging.info('saving index')
         with open(file_path, 'wb') as fp:
             pickle.dump(self.index, fp)
 
