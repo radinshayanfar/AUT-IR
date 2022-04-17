@@ -1,14 +1,12 @@
 import itertools
-from functools import reduce
-from typing import Callable, Dict
-
-import numpy as np
-import matplotlib.pyplot as plt
+from typing import Callable
 
 import hazm.utils
+import matplotlib.pyplot as plt
+import numpy as np
 from tqdm.contrib import tqdm
 
-stop_set: set = set(hazm.utils.stopwords_list()).union(set("!@#$%^&*()-_=+?/\\|,~`:'\";<>"))
+stop_set: set = set(hazm.utils.stopwords_list()).union(set("!@#$%^&*()-_=+?/\\|,~`:'\";<>.،"))
 
 
 def map_dict(f: Callable, d: dict) -> dict:
@@ -65,7 +63,7 @@ def heaps_law(ir, stem):
     theta = np.polyfit(x[:-1], y[:-1], 1, w=np.sqrt(y[:-1]))
     y_line = theta[1] + theta[0] * np.array(x)
 
-    plt.plot(x, y, 'b')
+    plt.plot(x, y, 'b-x')
     plt.plot(x, y_line, 'r--')
     plt.xlabel('log10 T')
     plt.ylabel('log10 M')
