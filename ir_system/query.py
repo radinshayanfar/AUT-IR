@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Iterator
 
 import hazm
 
@@ -21,6 +21,10 @@ class Expression:
             self.operator = Expression.and_positional_intersect
 
     def evaluate(self):
+        if isinstance(self.expr1, DummyIdentifier):
+            return self.expr2.evaluate()
+        if isinstance(self.expr2, DummyIdentifier):
+            return self.expr1.evaluate()
         return self.operator(self.expr1.evaluate(), self.expr2.evaluate())
 
     @staticmethod
@@ -93,6 +97,14 @@ class Expression:
         return self.__str__()
 
 
+class DummyIdentifier:
+    def __str__(self) -> str:
+        return 'DUMMY'
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+
 class Identifier:
     def __init__(self, term: str, index: InvertedIndex):
         self.term = term
@@ -109,11 +121,51 @@ class Identifier:
 
 
 class Query:
-    def __init__(self, query_string: str):
-        binary_q, proximity_q = self.parse_proximities(query_string)
-        self.binary_token, self.proximity_tokens = self.tokenize_queries(binary_q, proximity_q)
-        # print(self.binary_token)
-        # print(self.proximity_tokens)
+    def __init__(self, query_string: str, index):
+        self.index = index
+        # normalize
+        normal_query = hazm.Normalizer().normalize(query_string)
+        # tokenize
+        tokens = hazm.word_tokenize(normal_query)
+        # parse !
+        tokens = self.concat_nots(tokens)
+        # stem - stop word
+        tokens = list(map(hazm.Stemmer().stem, tokens))
+        tokens = remove_stop_words(tokens, set_=utils.stop_set - set('«»'))
+        # build tree
+        self.exp_tree = self.build_tree(tokens)
+
+    def concat_nots(self, tokens):
+        out = []
+        it = iter(tokens)
+        for token in it:
+            if token == '!':  # next word should be excluded from results
+                out.append('!' + next(it))
+                continue
+            out.append(token)
+        return out
+
+    def build_tree(self, tokens: list) -> Expression:
+        def build_positional(it: Iterator) -> Expression:
+            tree = DummyIdentifier()
+            for token in it:
+                if token == '»':
+                    break
+                tree = Expression(tree, 'AND POS', Identifier(token, self.index))
+            return tree
+
+        exp = DummyIdentifier()
+        it = iter(tokens)
+        for token in it:
+            if token == '«':
+                sub_tree = build_positional(it)
+                exp = Expression(exp, 'AND', sub_tree)
+            elif token[0] == '!':
+                exp = Expression(exp, 'AND NOT', Identifier(token[1:], self.index))
+            else:
+                exp = Expression(exp, 'AND', Identifier(token, self.index))
+
+        return exp
 
     def parse_proximities(self, q_str: str) -> Tuple[str, list]:
         regex = r'"(.*?)"'
@@ -124,52 +176,5 @@ class Query:
 
         return q_str, proximity_queries
 
-    def preprocess_query(self, q_str: str, stop_words=True, preserve_exclamation=False) -> List[str]:
-        # Normalizing query
-        q_str = hazm.Normalizer().normalize(q_str)
-
-        # Tokenizing query
-        q_str = hazm.word_tokenize(q_str)
-
-        # Stemming query
-        q_str = list(map(hazm.Stemmer().stem, q_str))
-
-        # Removing stop words
-        if stop_words:
-            # ! should not be removed from non-positional queries
-            q_str = remove_stop_words(q_str, set_=utils.stop_set - {'!'} if preserve_exclamation else None)
-
-        return q_str
-
-    def tokenize_queries(self, binary_q: str, proximity_q: List[str]) -> Tuple[List[str], List[List[str]]]:
-        binary_q = self.preprocess_query(binary_q, preserve_exclamation=True)
-        proximity_q = [self.preprocess_query(q) for q in proximity_q]
-
-        return binary_q, proximity_q
-
-    def tokens_to_expression(self, tokens: List[str], operator, index: InvertedIndex) -> Union[Identifier, Expression]:
-        it = iter(range(len(tokens)))
-        exp = Identifier(tokens[next(it)], index)
-        for i in it:
-            if tokens[i] == '!':
-                try:
-                    i = next(it)
-                except StopIteration:  # end of tokens due to removing stop words
-                    break
-                exp = Expression(exp, 'AND NOT', Identifier(tokens[i], index))
-            else:
-                exp = Expression(exp, operator, Identifier(tokens[i], index))
-
-        return exp
-
-    def get_results(self, index: InvertedIndex) -> PostingsList:
-        it = iter(self.proximity_tokens)
-        if len(self.binary_token) > 0:
-            exp = self.tokens_to_expression(self.binary_token, 'AND', index)
-        else:
-            exp = self.tokens_to_expression(next(it), 'AND POS', index)
-
-        for tokens in it:
-            exp = Expression(exp, 'AND', self.tokens_to_expression(tokens, 'AND POS', index))
-
-        return exp.evaluate()
+    def get_results(self) -> PostingsList:
+        return self.exp_tree.evaluate()

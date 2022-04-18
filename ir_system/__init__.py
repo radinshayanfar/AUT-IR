@@ -57,8 +57,8 @@ class IR:
         return out
 
     def query(self, query_string: str) -> list:
-        q = Query(query_string)
-        results = q.get_results(self.index)
+        q = Query(query_string, self.index)
+        results = q.get_results()
         results.p_list.sort(reverse=True)
         if len(results) > 5:
             results.p_list = results.p_list[:5]

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm.contrib import tqdm
 
-stop_set: set = set(hazm.utils.stopwords_list()).union(set("!@#$%^&*()-_=+?/\\|,~`:'\";<>.،"))
+stop_set: set = set(hazm.utils.stopwords_list()).union(set("!@#$%^&*()-_=+?/\\|,~`:'\";<>.،«»"))
 
 
 def map_dict(f: Callable, d: dict) -> dict:
