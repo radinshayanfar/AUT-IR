@@ -55,14 +55,11 @@ if __name__ == '__main__':
 
     handling_arguments(args, ir)
 
-    # print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[:10])
+    # print(len(ir.index.dictionary.keys()))
+    # print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[35000:35200])
+    # print([i for i in sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True) if ir.index.dictionary[i].total_freq() < 4][:100])
     while True:
         q_str = input('--> ')
         if q_str == '':
             break
         pprint(ir.query(q_str))
-
-    # pprint(ir.query('تحریم آمریکا ایران'))
-    # pprint(ir.query('"رییس جمهور"'))
-    # pprint(ir.query('غده'))
-    # pprint(ir.query('"تحریم هسته‌ای" آمریکا علیه برادران ! ایران'))
