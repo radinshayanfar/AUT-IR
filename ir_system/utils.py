@@ -32,6 +32,8 @@ def zipf_law(ir, stop_words):
     theta = np.polyfit(x, y, 1, w=np.sqrt(y))
     y_line = theta[1] + theta[0] * np.array(x)
 
+    print(f"line: y={theta[0]:.2f}x+{theta[1]:.2f}")
+
     plt.plot(x, y, 'b')
     plt.plot(x, y_line, 'r--')
     plt.xlabel('log10 rank')
@@ -64,6 +66,8 @@ def heaps_law(ir, stem):
 
     theta = np.polyfit(x[:-1], y[:-1], 1, w=np.sqrt(y[:-1]))
     y_line = theta[1] + theta[0] * np.array(x)
+
+    print(f"line: y={theta[0]:.2f}x+{theta[1]:.2f}")
 
     plt.plot(x, y, 'b-x')
     plt.plot(x, y_line, 'r--')
