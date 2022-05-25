@@ -203,6 +203,8 @@ class RankedQuery:
     def get_results(self, champions=True) -> PostingsList:
         scores = {}
         for token, token_tf in self.tfs.items():
+            if token not in self.index.dictionary:
+                continue
             postings_list = self.index.get_postings(token, champions=champions)
             idf = math.log10(self.collection_len / len(self.index.get_postings(token, champions=False)))
             print(f"token: {token}, idf: {idf}")
