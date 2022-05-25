@@ -204,7 +204,7 @@ class RankedQuery:
         scores = {}
         for token, token_tf in self.tfs.items():
             postings_list = self.index.get_postings(token, champions=champions)
-            idf = math.log10(self.collection_len / len(postings_list))
+            idf = math.log10(self.collection_len / len(self.index.get_postings(token, champions=False)))
             print(f"token: {token}, idf: {idf}")
             for posting in postings_list:
                 index = (1 + math.log10(len(posting))) * idf
