@@ -200,10 +200,10 @@ class RankedQuery:
 
         return map_dict(lambda t: 1 + math.log10(t), tfs)
 
-    def get_results(self) -> PostingsList:
+    def get_results(self, champions=True) -> PostingsList:
         scores = {}
         for token, token_tf in self.tfs.items():
-            postings_list = self.index.get_postings(token)
+            postings_list = self.index.get_postings(token, champions=champions)
             idf = math.log10(self.collection_len / len(postings_list))
             print(f"token: {token}, idf: {idf}")
             for posting in postings_list:

@@ -1,6 +1,7 @@
 import logging
 import math
-from typing import Type, Dict
+from typing import Dict
+
 from tqdm.contrib import tqdm
 
 from .utils import map_dict
@@ -70,8 +71,11 @@ class PostingsList:
 
 
 class InvertedIndex:
+    CHAMPIONS_R = 200
+
     def __init__(self, tokenized_collection: dict):
         self.dictionary: Dict[str, PostingsList] = {}
+        self.champions: Dict[str, PostingsList] = {}
         self.collection: dict = tokenized_collection
         self.lengths: Dict[int, float] = {}
 
@@ -84,13 +88,8 @@ class InvertedIndex:
         logging.info('calculating tf-idf vectors length')
         self.calculate_lengths()
 
-    def calculate_lengths(self):
-        for term, postings in tqdm(self.dictionary.items()):
-            idf = math.log10(len(self.collection) / len(postings))
-            for posting in postings:
-                tfidf = (1 + math.log10(len(posting))) * idf
-                self.lengths[posting.doc_id] = self.lengths.get(posting.doc_id, 0) + tfidf ** 2
-        self.lengths = map_dict(math.sqrt, self.lengths)
+        logging.info('building champions list')
+        self.build_champions()
 
     def add_document_postings(self, doc_index: dict):
         for token, posting in doc_index.items():
@@ -108,7 +107,26 @@ class InvertedIndex:
 
         return out_postings
 
-    def get_postings(self, term: str) -> PostingsList:
+    def calculate_lengths(self):
+        for term, postings in tqdm(self.dictionary.items()):
+            idf = math.log10(len(self.collection) / len(postings))
+            for posting in postings:
+                tfidf = (1 + math.log10(len(posting))) * idf
+                self.lengths[posting.doc_id] = self.lengths.get(posting.doc_id, 0) + tfidf ** 2
+        self.lengths = map_dict(math.sqrt, self.lengths)
+
+    def build_champions(self):
+        for term, postings in tqdm(self.dictionary.items()):
+            champs = sorted(postings.p_list, reverse=True)
+            champs = champs[:min(len(champs), InvertedIndex.CHAMPIONS_R)]
+            champs.sort(key=lambda x: x.doc_id)
+            champs_postings = PostingsList()
+            champs_postings.p_list = champs
+            self.champions[term] = champs_postings
+
+    def get_postings(self, term: str, champions=False) -> PostingsList:
+        if champions:
+            return self.champions.get(term, PostingsList())
         return self.dictionary.get(term, PostingsList())
 
     def total_tokens(self):
