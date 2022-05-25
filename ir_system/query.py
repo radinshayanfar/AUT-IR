@@ -1,11 +1,12 @@
+import math
 import re
-from typing import Tuple, List, Union, Iterator
+from typing import Tuple, List, Union, Iterator, Dict, Any
 
 import hazm
 
-from . import InvertedIndex, utils
+from . import InvertedIndex, utils, PostingsList
 from .indexer import PostingsList, Posting
-from .utils import remove_stop_words
+from .utils import remove_stop_words, map_dict
 
 
 class Expression:
@@ -120,7 +121,7 @@ class Identifier:
         return self.term.__repr__()
 
 
-class Query:
+class BooleanQuery:
     def __init__(self, query_string: str, index):
         self.index = index
         # normalize
@@ -178,3 +179,41 @@ class Query:
 
     def get_results(self) -> PostingsList:
         return self.exp_tree.evaluate()
+
+
+class RankedQuery:
+    def __init__(self, query_string: str, index, collection_len: int):
+        self.index = index
+        self.collection_len = collection_len
+        # normalize
+        normal_query = hazm.Normalizer().normalize(query_string)
+        # tokenize
+        tokens = hazm.word_tokenize(normal_query)
+        # stem
+        tokens = list(map(hazm.Stemmer().stem, tokens))
+        self.tfs = self.query_tf(tokens)
+
+    def query_tf(self, tokens: List[str]) -> Dict[str, int]:
+        tfs = {}
+        for token in tokens:
+            tfs[token] = tfs.get(token, 0) + 1
+
+        return map_dict(lambda t: 1 + math.log10(t), tfs)
+
+    def get_results(self) -> PostingsList:
+        scores = {}
+        for token, token_tf in self.tfs.items():
+            postings_list = self.index.get_postings(token)
+            idf = math.log10(self.collection_len / len(postings_list))
+            print(f"token: {token}, idf: {idf}")
+            for posting in postings_list:
+                index = (1 + math.log10(len(posting))) * idf
+                scores[posting.doc_id] = scores.get(posting.doc_id, 0) + index * token_tf
+
+        scores = {doc_id: (score / self.index.lengths[doc_id]) for doc_id, score in scores.items()}
+        ranked_results = sorted(scores, key=scores.get, reverse=True)
+
+        out_postings_list = PostingsList()
+        for doc_id in ranked_results:
+            out_postings_list.add_document(Posting(doc_id))
+        return out_postings_list

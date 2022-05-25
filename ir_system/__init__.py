@@ -5,7 +5,7 @@ import pickle
 import hazm
 
 from .indexer import InvertedIndex, PostingsList
-from .query import Query
+from .query import BooleanQuery, RankedQuery
 from .utils import map_dict, remove_stop_words
 
 
@@ -34,7 +34,6 @@ class IR:
         self.tokenized_collection = collection
 
     def build_index(self):
-        logging.info('building inverted index')
         self.index: InvertedIndex = InvertedIndex(self.tokenized_collection)
         self.index.index_collection()
 
@@ -56,11 +55,18 @@ class IR:
 
         return out
 
-    def query(self, query_string: str) -> list:
-        q = Query(query_string, self.index)
+    def boolean_query(self, query_string: str) -> list:
+        q = BooleanQuery(query_string, self.index)
         results = q.get_results()
         results.p_list.sort(reverse=True)
         if len(results) > 5:
             results.p_list = results.p_list[:5]
 
+        return self.posting_result_to_title(results)
+
+    def ranked_query(self, query_string: str) -> list:
+        q = RankedQuery(query_string, self.index, len(self.collection))
+        results = q.get_results()
+        if len(results) > 5:
+            results.p_list = results.p_list[:5]
         return self.posting_result_to_title(results)

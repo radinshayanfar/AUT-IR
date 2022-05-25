@@ -1,5 +1,9 @@
+import logging
+import math
 from typing import Type, Dict
 from tqdm.contrib import tqdm
+
+from .utils import map_dict
 
 
 class Posting:
@@ -69,11 +73,24 @@ class InvertedIndex:
     def __init__(self, tokenized_collection: dict):
         self.dictionary: Dict[str, PostingsList] = {}
         self.collection: dict = tokenized_collection
+        self.lengths: Dict[int, float] = {}
 
     def index_collection(self):
+        logging.info('building inverted index')
         for doc_id, tokens in tqdm(self.collection.items()):
             doc_index = self.index_document(doc_id)
             self.add_document_postings(doc_index)
+
+        logging.info('calculating tf-idf vectors length')
+        self.calculate_lengths()
+
+    def calculate_lengths(self):
+        for term, postings in tqdm(self.dictionary.items()):
+            idf = math.log10(len(self.collection) / len(postings))
+            for posting in postings:
+                tfidf = (1 + math.log10(len(posting))) * idf
+                self.lengths[posting.doc_id] = self.lengths.get(posting.doc_id, 0) + tfidf ** 2
+        self.lengths = map_dict(math.sqrt, self.lengths)
 
     def add_document_postings(self, doc_index: dict):
         for token, posting in doc_index.items():

@@ -19,6 +19,11 @@ def parse_arguments() -> Namespace:
                          help='load previously saved index')
     i_group.add_argument('-s', '--save', type=str, action='store', metavar='index.pkl', help='save built index')
 
+    t_group = parser.add_mutually_exclusive_group(required=False)
+    t_group.add_argument('-r', '--ranked', action='store_true', default=True, help='ranked retrieval using tf-idf')
+    t_group.add_argument('-b', '--boolean', action='store_true', default=False,
+                         help='boolean retrieval using positional index')
+
     parser.add_argument('collection', type=str, help='collection .json file path', metavar='collection.json')
 
     return parser.parse_args()
@@ -40,7 +45,7 @@ def handling_arguments(args: Namespace, ir: ir_system.IR):
         ir.load_index(args.load)
         logging.info('index loaded')
     else:
-        ir.preprocess()
+        ir.preprocess(stop_words=False)
         ir.build_index()
 
     if args.save is not None:
@@ -55,11 +60,11 @@ if __name__ == '__main__':
 
     handling_arguments(args, ir)
 
-    # print(len(ir.index.dictionary.keys()))
-    # print(sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True)[35000:35200])
-    # print([i for i in sorted(list(ir.index.dictionary.keys()), key=lambda x: ir.index.dictionary[x].total_freq(), reverse=True) if ir.index.dictionary[i].total_freq() < 4][:100])
     while True:
         q_str = input('--> ')
         if q_str == '':
             break
-        pprint(ir.query(q_str))
+        if args.boolean:
+            pprint(ir.boolean_query(q_str))
+        else:
+            pprint(ir.ranked_query(q_str))
