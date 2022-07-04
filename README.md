@@ -35,7 +35,7 @@ If the inverted index is saved beforehand, it can be loaded using `--load` switc
 There are two operation modes; boolean and ranked. In ranked mode, documents are scored based on a tf-idf weighting scheme. In boolean mode, the number of terms' occurrences is used to rank the results. Supported operators for boolean mode are:
 
 - And: The default operator by using `space` between terms in a query; `A B`
-- Not: By using `!` before a term;`A ! B`
+- Not: By using `!` before a term; `A ! B`
 - Phrase: By using `"` around the phrase; `"A B"`
 
 A sample input collection is available [here](./sample.json).
