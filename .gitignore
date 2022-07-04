@@ -107,4 +107,5 @@ pip-selfcheck.json
 # End of https://www.toptal.com/developers/gitignore/api/pycharm+all,virtualenv
 
 *.json
+!sample.json
 index.pkl
